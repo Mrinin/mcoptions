@@ -1,4 +1,6 @@
 import os
+import shutil
+from pathlib import Path
 from tkinter import *
 from tkinter import filedialog
 
@@ -7,6 +9,7 @@ root = Tk()
 
 computer_name = ""
 mco_filepath = ""
+mcm_filepath = ""
 total_loadouts = 0
 available_load = []
 
@@ -14,11 +17,12 @@ def main():
     root.title("MCOptions")
     root.resizable(False, False)
 
-    canvas = Canvas(root, height=350, width=500, bg="#e3e3e3")
+    canvas = Canvas(root, height=450, width=640, bg="#e3e3e3")
     canvas.pack(expand=True)
 
     # Computer Name created earlier
-    global  mco_filepath
+    global mco_filepath
+    global mcm_filepath
     global computer_name
     temp_path = os.path.expanduser('~') + "/AppData/Roaming/.minecraft/"
     computer_name = temp_path + "options.txt"
@@ -26,6 +30,7 @@ def main():
     if not os.path.exists(temp_path + "mco_loadouts"):
         os.mkdir(temp_path + "mco_loadouts")
 
+    mcm_filepath = temp_path + "mods/"
     mco_filepath = temp_path + "mco_loadouts/"
 
     actual_program(" ")
@@ -61,9 +66,17 @@ def actual_program(message):
     name_set = Entry(program_frame, text="das", bg="#e3e3e3")
     name_set.place(relwidth=0.2, relheight=0.05, relx=0.65, rely=0.3)
 
-    save_button = Button(program_frame, text="Save current options.txt\nas a Loadout",
-                         command=lambda: save(name_set.get()), bg="#333333", foreground="#d4d4d4")
-    save_button.place(relwidth=0.3, relheight=0.1, relx=0.6, rely=0.45)
+    save_button1 = Button(program_frame, text="Save current options.txt as a Loadout ⚙",
+                         command=lambda: save(name_set.get(), True, False), bg="#333333", foreground="#d4d4d4")
+    save_button1.place(relwidth=0.35, relheight=0.05, relx=0.57, rely=0.37)
+
+    save_button2 = Button(program_frame, text="Save current mods folder as a Loadout 🔨",
+                         command=lambda: save(name_set.get(), False, True), bg="#333333", foreground="#d4d4d4")
+    save_button2.place(relwidth=0.35, relheight=0.05, relx=0.57, rely=0.44)
+
+    save_button3 = Button(program_frame, text="Save both current mods folder\n and options.txt as a Loadout ⚙ 🔨",
+                         command=lambda: save(name_set.get(), True, True), bg="#333333", foreground="#d4d4d4")
+    save_button3.place(relwidth=0.35, relheight=0.09, relx=0.57, rely=0.51)
 
     # MESSAGE SHOW
     message_lb = Label(program_frame, bg="#e3e3e3", text= message)
@@ -89,6 +102,14 @@ def actual_program(message):
 
     # SHOW LOAD BUTTONS
     for string in available_load:
+        string_addition = ""
+        if Path(mco_filepath + string + "/load_mods").exists():
+            string_addition = " 🔨"
+        if Path(mco_filepath + string + "/load_opts.txt").exists():
+            string_addition = string_addition + " ⚙"
+
+        string = string + string_addition
+
         if index == 0:
             load_buttons[index] = Button(program_frame, text=string, command=lambda: load(available_load[0]),
                                          bg="#333333", foreground="#d4d4d4", width= 15)
@@ -131,7 +152,7 @@ def actual_program(message):
                                          bg="#333333", foreground="#d4d4d4")
 
         load_buttons[index].place(anchor=CENTER, relx=0.22, rely=(0.1 * index) + 0.22)
-        delete_buttons[index].place(anchor=CENTER, relx=0.36, rely=(0.1 * index) + 0.22)
+        delete_buttons[index].place(anchor=CENTER, relx=0.33, rely=(0.1 * index) + 0.22)
 
         index = index + 1
         if index == 8:
@@ -144,7 +165,8 @@ def actual_program(message):
     root.mainloop()
 
 def delete(name):
-    os.remove(mco_filepath + name + ".txt")
+    #os.remove(mco_filepath + name + ".txt")
+    shutil.rmtree(mco_filepath + name)
 
     # CREATE LISTS
     available_load_new = []
@@ -167,19 +189,28 @@ def delete(name):
     actual_program(name + " successfully deleted")
 
 def load(to_be_loaded):
-    loaded_file = open(mco_filepath + to_be_loaded + ".txt", "r")
 
-    open(computer_name, "r+").write(loaded_file.read())
-    loaded_file.close()
+    if Path(mco_filepath + to_be_loaded + "/load_mods").exists():
+        if Path(mcm_filepath).exists():
+            print(mcm_filepath)
+            shutil.rmtree(mcm_filepath)
+        shutil.copytree(mco_filepath + to_be_loaded + "/load_mods", mcm_filepath)
+
+    if Path(mco_filepath + to_be_loaded + "/load_opts.txt").exists():
+        loaded_file = open(mco_filepath + to_be_loaded + "/load_opts.txt", "r")
+        open(computer_name, "r+").write(loaded_file.read())
+        loaded_file.close()
+
     actual_program("Successfully loaded the loadout named: \n" + to_be_loaded)
 
 
-def save(name):
+def save(name, is_options, is_mods):
+    errors = True
     if total_loadouts >= 7:
-        actual_program("Only a maximum of 7 loadouts\ncan be saved! Please delete\nsome first")
+        actual_program("Only a maximum of 7 loadouts\ncan be saved! Please delete\nsome first.")
     else:
         if name == "":
-            actual_program("Please enter a name")
+            actual_program("Please enter a name.")
         else:
             # CHECK FOR DUPLICATE LOADOUT SAVE
             name_duplicate = False
@@ -191,16 +222,32 @@ def save(name):
             if name_duplicate:
                 actual_program( name + " is already being used!")
             else:
-                savedfile = open(mco_filepath + name + ".txt", "w")
-                save_options = open(computer_name, "r").read()
-                savedfile.write(save_options)
-                savedfile.close()
+                if is_mods:
+                    if os.path.exists(mcm_filepath):
+                        errors = False
+                    else:
+                        actual_program("There is no mods folder in\nminecraft root folder!")
+                else:
+                    print("?*")
+                    errors = False
 
-                fileLists = open(mco_filepath + "saved_loadouts.txt", "a")
-                fileLists.write(name + "\n")
-                fileLists.close()
-                actual_program("Successfully saved a loadout as: \n" + name)
+    if not errors:
+        print("what")
+        os.mkdir(mco_filepath + name)
+        if is_mods:
+            shutil.copytree(mcm_filepath, mco_filepath + name + "/load_mods")
 
+        if is_options:
+            saved_file = open(mco_filepath + name + "/load_opts.txt", "w")
+            save_options = open(computer_name, "r").read()
+            saved_file.write(save_options)
+            saved_file.close()
+
+        file_lists = open(mco_filepath + "saved_loadouts.txt", "a")
+        file_lists.write(name + "\n")
+        file_lists.close()
+
+        actual_program("Successfully saved a loadout as: \n" + name)
 
 def get_load_path():
     return filedialog.askopenfilename(title="Select options.txt",
