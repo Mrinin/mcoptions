@@ -10,6 +10,7 @@ The same goes for mods folder. If you have different mods for different versions
 Simply run the executable, there you can save your currently set options (In Minecraft, so you have to set these in Minecraft itself) and mods folder then save them. After that, you can load between these saved loadouts with a single click. It saves your current resource pack too.
 
 If a loadout loads options, it has a ⚙ emoji next to it.
+If a loadout loads optifine options, it has a 🔧 emoji next to it.
 If a loadout loads mods, it has a 🔨 emoji next to it.
 If they save both, they will simply have both.
 
