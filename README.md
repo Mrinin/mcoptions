@@ -12,7 +12,6 @@ Simply run the executable, there you can save your currently set options (In Min
 If a loadout loads options, it has a ⚙ emoji next to it.
 If a loadout loads optifine options, it has a 🔧 emoji next to it.
 If a loadout loads mods, it has a 🔨 emoji next to it.
-If they save both, they will simply have both.
 
 In more technical terms, this program copies your current options.txt file -the one where every single setting is stored-, your mods folder -the one that stores all the mods- and copies them to another file. When you load them, it copies that saved file to origina file.
 
